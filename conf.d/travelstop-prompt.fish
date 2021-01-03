@@ -34,6 +34,7 @@ functions --copy fish_prompt fish_prompt_travelstop
 
 function __travelstop_prompt_linebreak_enable --on-event fish_postexec
   set --global travelstop_prompt_linebreak_enabled
+  functions --erase __travelstop_prompt_linebreak_enable
 end
 
 function fish_prompt
