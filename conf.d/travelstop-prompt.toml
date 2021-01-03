@@ -1,0 +1,33 @@
+add_newline = false
+format = """
+$directory\
+${custom.aws_profile_serverless}\
+${custom.aws_profile_administrator}\
+${custom.aws_stage}\
+$cmd_duration\
+$character
+"""
+
+[character]
+success_symbol = "[❱](dimmed cyan)"
+error_symbol = "[❱](dimmed red)"
+vicmd_symbol = "[❱](cyan)"
+
+[directory]
+truncate_to_repo = true
+truncation_length = 10
+
+[custom.aws_profile_serverless]
+command = "string replace --regex '@.*' '' $AWS_PROFILE"
+when = "string match --quiet 'ServerlessDeployNonProd*' $AWS_PROFILE"
+format = "[$output](bold yellow)"
+
+[custom.aws_profile_administrator]
+command = "string replace --regex '@.*' '' $AWS_PROFILE"
+when = "string match --quiet 'AdministratorNonProd*' $AWS_PROFILE"
+format = "[$output](bold underline green)"
+
+[custom.aws_stage]
+command = "string replace --regex '.*@' '' $AWS_PROFILE"
+when = "true"
+format = " [$output](bold purple) "
