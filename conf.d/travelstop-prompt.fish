@@ -20,7 +20,7 @@ __travelstop_prompt_toggle
 function __travelstop_prompt_repaint --on-variable AWS_PROFILE
   set --global --export travelstop_prompt_aws_profile (string replace --regex '@.*' '' "$AWS_PROFILE")
   set --global --export travelstop_prompt_aws_stage (string replace --regex '.*@' '' "$AWS_PROFILE")
-  commandline --function repaint
+  commandline --function repaint-mode
 end
 
 function __restore_last_status --argument-names last_status
