@@ -3,6 +3,7 @@ format = """
 $directory\
 ${custom.aws_profile_serverless}\
 ${custom.aws_profile_administrator}\
+${custom.aws_profile_systemadministrator}\
 ${custom.aws_stage}\
 $cmd_duration\
 $character
@@ -28,6 +29,12 @@ shell = "dash"
 command = "echo $travelstop_prompt_aws_profile"
 when = "test \"$travelstop_prompt_aws_profile\" = AdministratorNonProd"
 format = "[$output](bold underline green)"
+
+[custom.aws_profile_systemadministrator]
+shell = "dash"
+command = "echo $travelstop_prompt_aws_profile"
+when = "test \"$travelstop_prompt_aws_profile\" = SystemAdministratorNonProd"
+format = "[$output](bold green)"
 
 [custom.aws_stage]
 shell = "dash"
