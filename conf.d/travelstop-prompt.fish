@@ -23,8 +23,8 @@ function __travelstop_prompt_repaint --on-variable AWS_PROFILE
   commandline --function repaint-mode
 end
 
-function __restore_last_status --argument-names last_status
-  return $last_status
+function __restore_exit_code --argument-names exit_code
+  return $exit_code
 end
 
 functions --query fish_prompt_original || functions --copy fish_prompt fish_prompt_original
@@ -37,13 +37,13 @@ function __travelstop_prompt_linebreak_enable --on-event fish_postexec
 end
 
 function fish_prompt
-  set last_status $status
+  set exit_code $status
   if set --query --global travelstop_prompt_enabled
     set --query --global travelstop_prompt_linebreak_enabled && echo
-    __restore_last_status $last_status
+    __restore_exit_code $exit_code
     fish_prompt_travelstop
   else
-    __restore_last_status $last_status
+    __restore_exit_code $exit_code
     fish_prompt_original
   end
 end
