@@ -32,9 +32,14 @@ starship init fish | source
 functions --query fish_prompt_travelstop && functions --erase fish_prompt_travelstop
 functions --copy fish_prompt fish_prompt_travelstop
 
+function __travelstop_prompt_linebreak_enable --on-event fish_postexec
+  set --global travelstop_prompt_linebreak_enabled
+end
+
 function fish_prompt
   set last_status $status
   if set --query --global travelstop_prompt_enabled
+    set --query --global travelstop_prompt_linebreak_enabled && echo
     __restore_last_status $last_status
     fish_prompt_travelstop
   else
