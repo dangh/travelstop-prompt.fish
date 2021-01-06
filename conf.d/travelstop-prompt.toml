@@ -1,10 +1,7 @@
 add_newline = false
 format = """
 $directory\
-${custom.aws_profile_serverless}\
-${custom.aws_profile_administrator}\
-${custom.aws_profile_systemadministrator}\
-${custom.aws_stage}\
+$env_var\
 $cmd_duration\
 $character
 """
@@ -18,26 +15,6 @@ vicmd_symbol = "[❱](cyan)"
 truncate_to_repo = true
 truncation_length = 10
 
-[custom.aws_profile_serverless]
-shell = "dash"
-command = "echo $travelstop_prompt_aws_profile"
-when = "test \"$travelstop_prompt_aws_profile\" = ServerlessDeployNonProd"
-format = "[$output](bold yellow)"
-
-[custom.aws_profile_administrator]
-shell = "dash"
-command = "echo $travelstop_prompt_aws_profile"
-when = "test \"$travelstop_prompt_aws_profile\" = AdministratorNonProd"
-format = "[$output](bold underline green)"
-
-[custom.aws_profile_systemadministrator]
-shell = "dash"
-command = "echo $travelstop_prompt_aws_profile"
-when = "test \"$travelstop_prompt_aws_profile\" = SystemAdministratorNonProd"
-format = "[$output](bold green)"
-
-[custom.aws_stage]
-shell = "dash"
-command = "echo $travelstop_prompt_aws_stage"
-when = "true"
-format = " [$output](bold purple) "
+[env_var]
+variable = "AWS_PROFILE_TRAVELSTOP"
+format = "$env_value "
