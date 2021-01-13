@@ -1,6 +1,8 @@
-status is-interactive || exit
-
-set --local STARSHIP_CONFIG_ORIGINAL $STARSHIP_CONFIG
+function __travelstop_prompt_notify --argument-names title message sound --description "send notification to system"
+  osascript -e "display notification \"$message\" with title \"$title\"" &
+  set sound "/System/Library/Sounds/$sound.aiff"
+  test -f "$sound" && afplay $sound &
+end
 
 function __travelstop_prompt_aws_config --on-event clipboard_change --argument-names creds
   set --query travelstop_aws_config || return
@@ -13,9 +15,20 @@ function __travelstop_prompt_aws_config --on-event clipboard_change --argument-n
       echo [$role@$stage]\n{$aws_access_key_id}\n{$aws_secret_access_key}\n{$aws_session_token} > ~/.aws/credentials
       set --universal --export AWS_PROFILE $role@$stage
       set --universal --export AWS_DEFAULT_REGION $region
+      set --local notif_profile $AWS_PROFILE
+      set --local notif_region $region
+      set --local title 📮 AWS profile updated
+      functions --query fontface &&
+        set notif_profile (fontface math_monospace "$notif_profile") &&
+        set notif_region (fontface math_monospace "$notif_region")
+      __travelstop_prompt_notify "$title" "$notif_profile\n$notif_region"
     end
   end
 end
+
+status is-interactive || exit
+
+set --local STARSHIP_CONFIG_ORIGINAL $STARSHIP_CONFIG
 
 function __travelstop_prompt_repaint --on-variable AWS_PROFILE
   set --local profile (string replace --regex '@.*' '' "$AWS_PROFILE")
