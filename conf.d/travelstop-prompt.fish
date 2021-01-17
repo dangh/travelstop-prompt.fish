@@ -1,15 +1,15 @@
-function __travelstop_prompt_notify --argument-names title message sound --description "send notification to system"
+function _tsp_notify --argument-names title message sound --description "send notification to system"
   osascript -e "display notification \"$message\" with title \"$title\"" &
   set sound "/System/Library/Sounds/$sound.aiff"
   test -f "$sound" && afplay $sound &
 end
 
-function __travelstop_prompt_aws_config --on-event clipboard_change --argument-names creds
-  set --query travelstop_aws_config || return
+function _tsp_aws_config --on-event clipboard_change --argument-names creds
+  set --query tsp_aws_config || return
   if string match --quiet --regex '^\[[[:alnum:]_]+\](\naws_[[:alpha:]_]+=.*)+$' "$creds"
     printf $creds | read --local --line profile aws_access_key_id aws_secret_access_key aws_session_token
     string match --regex '^\[([[:digit:]]+)_([[:alpha:]]+)\]' $profile | read --local --line _ account_id role
-    for stage_config in $travelstop_aws_config
+    for stage_config in $tsp_aws_config
       echo $stage_config | read --delimiter=, --local _account_id stage region
       test "$account_id" = "$_account_id" || continue
       echo [$role@$stage]\n{$aws_access_key_id}\n{$aws_secret_access_key}\n{$aws_session_token} > ~/.aws/credentials
@@ -21,62 +21,54 @@ function __travelstop_prompt_aws_config --on-event clipboard_change --argument-n
       functions --query fontface &&
         set notif_profile (fontface math_monospace "$notif_profile") &&
         set notif_region (fontface math_monospace "$notif_region")
-      __travelstop_prompt_notify "$title" "$notif_profile\n$notif_region"
+      _tsp_notify "$title" "$notif_profile\n$notif_region"
     end
   end
 end
 
 status is-interactive || exit
 
-set --local STARSHIP_CONFIG_ORIGINAL $STARSHIP_CONFIG
+set --query tsp_color_profile || set --global tsp_color_stage \--bold magenta
+set --query tsp_color_stage || set --global tsp_color_stage \--bold magenta
+set --query tsp_color_sep || set --global tsp_color_sep \--dim magenta
+set --query tsp_sep || set --global tsp_sep @
 
-function __travelstop_prompt_repaint --on-variable AWS_PROFILE
-  set --local profile (string replace --regex '@.*' '' "$AWS_PROFILE")
-  set --local stage (string replace --regex '.*@' '' "$AWS_PROFILE")
-  switch $profile
-  case ServerlessDeployNonProd
-    set profile (set_color --bold yellow)$profile(set_color normal)
-  case SystemAdministratorNonProd
-    set profile (set_color --bold green)$profile(set_color normal)
-  case AdministratorNonProd
-    set profile (set_color --bold --underline green)$profile(set_color normal)
+for color in tsp_color_{profile,stage,sep}
+  function $color --inherit-variable color
+    set colors
+    for color_ in {$color}_{$_tsp_profile}_{$_tsp_stage} {$color}_{$_tsp_profile} {$color}_{$_tsp_stage} $color
+      set --query $color_ && set _color $color_ && break
+    end
+    set --global _$color (set_color $$_color)
   end
-  switch $stage
-  case \*
-    set stage (set_color --bold magenta)$stage(set_color normal)
-  end
-  set --global --export AWS_PROFILE_TRAVELSTOP $profile $stage
+end
+
+function _tsp_repaint --on-variable AWS_PROFILE
+  set --global _tsp_profile (string replace --regex '@.*' '' "$AWS_PROFILE")
+  set --global _tsp_stage (string replace --regex '.*@' '' "$AWS_PROFILE")
+  tsp_color_profile
+  tsp_color_stage
+  tsp_color_sep
   commandline --function repaint-mode
-end
+  commandline --function repaint
+end && _tsp_repaint
 
-function __travelstop_prompt_switch --on-variable PWD
-  set --query travelstop_dir || set --local travelstop_dir '/wip/travelstop/'
-  if string match --quiet "*$travelstop_dir*" "$PWD/"
-    set --global --export STARSHIP_CONFIG ~/.config/fish/conf.d/travelstop-prompt.toml
-    set --global travelstop_prompt_enabled
+function _tsp_enable --on-variable PWD
+  set --query tsp_path || set --local tsp_path '/wip/travelstop/'
+  if string match --quiet "*$tsp_path*" "$PWD/"
+    set --global _tsp_enable
   else
-    set --global --export STARSHIP_CONFIG $STARSHIP_CONFIG_ORIGINAL
-    set --erase travelstop_prompt_enabled
+    set --erase _tsp_enable
   end
-end
+end && _tsp_enable
 
-__travelstop_prompt_switch
-__travelstop_prompt_repaint
+! functions --query fish_right_prompt_original && functions --query fish_right_prompt && functions --copy fish_right_prompt fish_right_prompt_original
 
-functions --query fish_prompt_original || functions --copy fish_prompt fish_prompt_original
-starship init fish | source
-functions --query fish_prompt_travelstop && functions --erase fish_prompt_travelstop
-functions --copy fish_prompt fish_prompt_travelstop
-
-function fish_prompt
+function fish_right_prompt
   set exit_code $status
-  if set --query travelstop_prompt_enabled
-    set --query travelstop_prompt_linebreak_enabled && echo
-    set --global travelstop_prompt_linebreak_enabled
-    test $exit_code -eq 0
-    fish_prompt_travelstop
+  if set --query _tsp_enable
+    string unescape "$_tsp_color_profile$_tsp_profile\x1b[0m$_tsp_color_sep$tsp_sep\x1b[0m$_tsp_color_stage$_tsp_stage\x1b[0m"
   else
-    test $exit_code -eq 0
-    fish_prompt_original
+    functions --query fish_right_prompt_original && fish_right_prompt_original
   end
 end
