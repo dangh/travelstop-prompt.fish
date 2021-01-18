@@ -65,7 +65,6 @@ end && _tsp_enable
 ! functions --query fish_right_prompt_original && functions --query fish_right_prompt && functions --copy fish_right_prompt fish_right_prompt_original
 
 function fish_right_prompt
-  set exit_code $status
   if set --query _tsp_enable
     string unescape "$_tsp_color_profile$_tsp_profile\x1b[0m$_tsp_color_sep$tsp_sep\x1b[0m$_tsp_color_stage$_tsp_stage\x1b[0m"
   else
